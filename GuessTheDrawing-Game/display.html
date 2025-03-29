@@ -1,0 +1,352 @@
+<!--
+Abdelrahman Qamhia: aaq225
+Zaara Yakub: zay225
+Titus Whang: juw225
+-->
+<!doctype html>
+<html>
+
+<head>
+  <title>Guesser</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #4C5FA2;
+    }
+
+    #container {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    #canvas-container {
+      margin-right: 20px;
+      border: 1px solid #ccc;
+      background-color: #ffffff;
+    }
+
+    #messages {
+      list-style-type: none;
+      margin: 20px;
+      padding: 0;
+      overflow-y: auto;
+      max-height: 800px;
+    }
+
+    #messages li {
+      padding: 10px;
+      background-color: #f0f0f0;
+      margin-bottom: 5px;
+      border-radius: 5px;
+    }
+
+    form {
+      background-color: #fff;
+      padding: 10px;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 47%;
+    }
+
+    form input {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-right: 10px;
+      width: 60%;
+      border-radius: 5px;
+    }
+
+    form button {
+      width: 36%;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      background-color: white;
+      padding: 20px;
+      border: 2px solid black;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .popup.show {
+      display: block;
+    }
+
+    .background-only {
+      background-color: #4C5FA2;
+    }
+
+    .background-only #canvas-container,
+    .background-only #toolbox {
+      display: none;
+    }
+
+    #info-box {
+      background-color: #BD9696;
+      border-radius: 5px;
+      padding: 10px;
+      margin-top: 20px;
+      margin-left: 20px;
+      display: flex;
+      justify-content: space-between;
+      flex-direction: column;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+      font-size: larger;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', Verdana, sans-serif;
+      color: #fff;
+      align-items: center;
+      text-align: center;
+      height: 306.876px;
+    }
+
+    .info-item {
+      margin-right: 10px;
+      margin-left: 10px;
+    }
+
+    .info-item img {
+      width: 50px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+
+    .info-item label,
+    p {
+      font-weight: bold;
+      font-size: larger;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container">
+    <div id="canvas-container">
+      <canvas id="myCanvas" width="800" height="800"></canvas>
+    </div>
+    <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <div id="info-box">
+      <div class="info-item">
+        <img src="images/clock_icon.png" alt="Clock Icon">
+        <p><span id="timeRemaining">45</span> seconds remaining</p>
+      </div>
+      <div class="info-item">
+        <label for="score">Score: <span id="score">0</span></label>
+      </div>
+      <div class="info-item">
+        <label for="round">Round: <span id="round">1</span></label>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="popup" class="popup">
+    <p>Correct guess!</p>
+    <p>Switching Sides...</p>
+    <p>Score: <span id="popupScoreCorrect">0</span></p>
+    <p>Round: <span id="popupRoundCorrect">1</span></p>
+  </div>
+
+  <div id="timeUpPopup" class="popup">
+    <p>Time is up!</p>
+    <p>Switching Sides...</p>
+    <p>Score: <span id="popupScoreTimeUp">0</span></p>
+    <p>Round: <span id="popupRoundTimeUp">1</span></p>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script>
+    let socket = io();
+    let canvas = document.getElementById("myCanvas");
+    let ctx = canvas.getContext("2d");
+    let obj = {};
+    let currentScore = 0;
+    let currentRound = 1;
+
+    // default drawing settings
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 5;
+
+    let isDrawing = false;
+
+    socket.on("mdown", (obj) => {
+      ctx.beginPath();
+      ctx.moveTo(obj.x, obj.y);
+    });
+
+    socket.on("mmove", (obj) => {
+      ctx.lineTo(obj.x, obj.y);
+      ctx.stroke();
+    });
+
+    // Listening for color change event from draw.html
+    socket.on('colorChange', function (color) {
+      ctx.strokeStyle = color; // Updating stroke color
+    });
+
+    // Listening for width change event from draw.html
+    socket.on('widthChange', function (width) {
+      ctx.lineWidth = width; // Updating stroke width
+    });
+
+    socket.on('wordSelection', function () {
+      $('#messages').prepend($('<li>').text("Game start!"));
+    });
+
+    // Listening for eraser event from draw.html
+    socket.on('eraser', function () {
+      ctx.strokeStyle = "#ffffff"; // Setting color to white for erasing
+    });
+
+    // Listening for clear event from draw.html
+    socket.on('clearCanvas', function () {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clearing the Canvas
+    });
+
+    // Listening for chat messages
+    socket.on('chat message', function (msg) {
+      $('#messages').prepend($('<li>').text(msg));
+    });
+
+    $(function () {
+      $('form').submit(function (e) {
+        e.preventDefault(); // this stops the page from refreshing
+        socket.emit('chat message', $('#m').val());
+        $('#m').val('');
+        return false;
+      });
+    });
+
+    // Switching to /draw from /display so we can alternate roles
+    socket.on('switchRoles', function () {
+      window.location.href = '/draw';
+    });
+
+    // when the game is done, go back to /homepage
+    socket.on('reset', function () {
+      window.location.href = '/homepage';
+    });
+
+    // Listening for the score update event
+    socket.on('score', (score) => {
+      currentScore = score; // Updating the currentScore variable
+      $('#score').text(score);
+    });
+
+    // Listening for the round update event
+    socket.on('round', (round) => {
+      currentRound = round; // Updating the currentRound variable
+      $('#round').text(round);
+    });
+
+    // Listening for the event from the server indicating a correct guess
+    socket.on('correctGuess', function () {
+      // Showing the popup ONLY
+      $('#popup').addClass('show');
+      $('#canvas-container, #toolbox, #messages, form, #info-box').hide();
+      $('body').addClass('background-only');
+      $('#popupScoreCorrect').text(currentScore);
+      $('#popupRoundCorrect').text(currentRound);
+
+      // Restore state after 3 seconds of the popup
+      setTimeout(function () {
+        $('#popup').removeClass('show');
+        $('#canvas-container, #toolbox, #messages, form').show();
+        $('body').removeClass('background-only');
+      }, 3000);
+    });
+
+    // Requesting the current game state
+    socket.emit('requestState');
+
+    // Restoring the canvas, color, and timer by clearing everything and drawing it again (this is functional most of the time, I tried)
+    socket.on('restoreState', function (state) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Redrawing all canvas events
+      state.canvas.forEach(event => {
+        switch (event.type) {
+          case 'mdown':
+            ctx.beginPath();
+            ctx.moveTo(event.data.x, event.data.y);
+            break;
+          case 'mmove':
+            ctx.lineTo(event.data.x, event.data.y);
+            ctx.stroke();
+            break;
+          case 'colorChange':
+            ctx.strokeStyle = event.data;
+            break;
+          case 'widthChange':
+            ctx.lineWidth = event.data;
+            break;
+          case 'eraser':
+            ctx.strokeStyle = "#ffffff";
+            break;
+        }
+      });
+
+      // Restoring color and stroke width
+      ctx.strokeStyle = state.color;
+      ctx.lineWidth = state.width;
+
+      // Updating timer in real time
+      $('#timeRemaining').text(state.timer);
+      if (state.score) {
+        $('#score').text(state.score);
+      } else {
+        $('#score').text("0");
+      }
+
+      if (state.round) {
+        $('#round').text(state.round);
+      } else {
+        $('#round').text("1");
+      }
+    });
+
+    socket.on('forceRefresh', () => {
+      window.location.reload(true);
+    });
+
+    // Updating the timer text
+    socket.on('timer', (remaining) => {
+      $('#timeRemaining').text(remaining);
+    });
+
+    // Showing the time is up popup when time is up, hiding appropriate things and restoring after 3 seconds
+    socket.on('timeUp', function () {
+      $('#timeUpPopup').addClass('show');
+      $('#canvas-container, #toolbox, #messages, form, #info-box').hide();
+      $('body').addClass('background-only');
+      $('#popupScoreTimeUp').text(currentScore);
+      $('#popupRoundTimeUp').text(currentRound);
+
+      setTimeout(function () {
+        $('#timeUpPopup').removeClass('show');
+        $('#canvas-container, #toolbox, #messages, form').show();
+        $('body').removeClass('background-only');
+      }, 3000);
+    });
+  </script>
+</body>
+
+</html>

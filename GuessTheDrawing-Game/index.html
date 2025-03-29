@@ -1,0 +1,101 @@
+<!--
+Abdelrahman Qamhia: aaq225
+Zaara Yakub: zay225
+Titus Whang: juw225
+-->
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Drawing</title>
+    <style>
+        body {
+            background-color: #4C5FA2;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        #usernameForm {
+            display: inline-block;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            font-size: 18px;
+            color: #333;
+        }
+
+        input[type="text"] {
+            width: 200px;
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <img class="logo" src="images/logo.png" width=400, alt="Game Logo">
+        <h1></h1>
+        <form id="usernameForm" autocomplete="off">
+            <label for="username">Enter your username:</label><br>
+            <input type="text" id="username" name="username" required><br>
+            <button type="submit">Start Game</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        $(document).ready(() => {
+            const socket = io();
+
+            socket.on('forceRefresh', () => {
+                window.location.reload(true);
+            });
+
+            $('#usernameForm').submit((event) => {
+                event.preventDefault();
+                const username = $('#username').val().trim();
+                if (username !== '') {
+                    $.post('/homepage', { username }, (response) => {
+                        window.location.href = response.redirectUrl;
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

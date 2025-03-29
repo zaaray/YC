@@ -1,0 +1,482 @@
+<!--
+Abdelrahman Qamhia: aaq225
+Zaara Yakub: zay225
+Titus Whang: juw225
+-->
+<!doctype html>
+<html>
+
+<head>
+  <title>Drawer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #4C5FA2;
+    }
+
+    #container {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    #canvas-container {
+      margin-right: 20px;
+      border: 1px solid #ccc;
+      background-color: #ffffff;
+    }
+
+    #toolbox {
+      width: 200px;
+      padding: 10px;
+      background-color: #e7e1e1e8;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+      margin-top: 20px;
+      font-size: larger;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+
+    }
+
+    #toolbox label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .color-box {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #000;
+      display: inline-block;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    #clear-button {
+      margin-top: 10px;
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      background-color: white;
+      padding: 20px;
+      border: 2px solid black;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .popup.show {
+      display: block;
+    }
+
+    .background-only {
+      background-color: #4C5FA2;
+    }
+
+    .background-only #canvas-container,
+    .background-only #toolbox {
+      display: none;
+    }
+
+    #info-box {
+      background-color: #BD9696;
+      border-radius: 5px;
+      padding: 10px;
+      margin-top: 20px;
+      margin-left: 20px;
+      display: flex;
+      justify-content: space-between;
+      flex-direction: column;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+      font-size: larger;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', Verdana, sans-serif;
+      color: #fff;
+      align-items: center;
+      text-align: center;
+      height: 306.876px;
+    }
+
+    .info-item {
+      margin-right: 10px;
+      margin-left: 10px;
+    }
+
+    .info-item img {
+      width: 50px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .info-item label,
+    p {
+      font-weight: bold;
+      font-size: larger;
+    }
+
+    #header {
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    #word-box {
+      width: 200px;
+      padding: 10px;
+      background-color: #e7e1e1e8;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+      margin-top: 20px;
+      margin-left: 20px;
+      font-size: larger;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    }
+
+    #word-box label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    #selectCategory {
+      margin-top: 5px;
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #category {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container">
+    <div id="canvas-container">
+      <canvas id="myCanvas" width="800" height="800"></canvas>
+    </div>
+    <div id="toolbox">
+      <div id="colorPalette">
+        <label for="color-box">Color Palette:</label>
+        <div class="color-box" style="background-color: black;"></div>
+        <div class="color-box" style="background-color: red;"></div>
+        <div class="color-box" style="background-color: blue;"></div>
+        <div class="color-box" style="background-color: yellow;"></div>
+        <div class="color-box" style="background-color: orange;"></div>
+        <div class="color-box" style="background-color: purple;"></div>
+        <div class="color-box" style="background-color: green;"></div>
+        <div class="color-box" style="background-color: grey;"></div>
+        <div class="color-box" style="background-color: #7B3F00;"></div>
+      </div>
+      <label for="strokeWidth">Stroke Width:</label>
+      <input type="range" id="strokeWidth" min="1" max="50" value="5">
+      <button id="eraser">Eraser</button>
+      <button id="clear-button">Clear</button>
+    </div>
+    <div id="word-box">
+      <label for="category">Category:</label>
+      <select id="category">
+        <option value="animals">Animals</option>
+        <option value="foods">Foods</option>
+        <option value="objects">Objects</option>
+        <option value="flags">Country Flags</option>
+        <option value="verbs">Verbs</option>
+      </select>
+      <button id="selectCategory">Select Category</button>
+    </div>
+    <div id="info-box">
+      <div class="info-item">
+        <img src="images/clock_icon.png" alt="Clock Icon">
+        <p><span id="timeRemaining">45</span> seconds remaining</p>
+      </div>
+      <div class="info-item">
+        <label for="score">Score: <span id="score">0</span></label>
+      </div>
+      <div class="info-item">
+        <label for="round">Round: <span id="round">1</span></label>
+      </div>
+      <div class="info-item">
+        <label for="word-txt"><span id="wordDisplay"></span></label>
+      </div>
+    </div>
+
+
+    <div id="timeUpPopup" class="popup">
+      <p>Time is up!</p>
+      <p>Switching Sides...</p>
+      <p>Score: <span id="popupScoreTimeUp">0</span></p>
+      <p>Round: <span id="popupRoundTimeUp">1</span></p>
+    </div>
+
+    <div id="popup" class="popup">
+      <p>The guesser guessed correctly!</p>
+      <p>Switching Sides...</p>
+      <p>Score: <span id="popupScoreCorrect">0</span></p>
+      <p>Round: <span id="popupRoundCorrect">1</span></p>
+    </div>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script>
+
+    $(() => {
+      let socket = io();
+      let canvas = document.getElementById("myCanvas");
+      let ctx = canvas.getContext("2d");
+
+      let obj = {};
+      let currentScore = 0;
+      let currentRound = 1;
+
+      // Default drawing settings
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 5;
+
+      // Function to set stroke color
+      function setColor(color) {
+        ctx.strokeStyle = color;
+        socket.emit('colorChange', color);
+      }
+
+      // Handling category selection by the drawer
+      $('#selectCategory').click(function () {
+        let category = $('#category').val();
+        socket.emit('categorySelection', category);
+      });
+
+      // Setting color from palette
+      $('.color-box').click(function () {
+        let color = $(this).css("background-color");
+        setColor(color);
+      });
+
+      // Function to set stroke width
+      $('#strokeWidth').change(function () {
+        let width = $(this).val();
+        ctx.lineWidth = width;
+        socket.emit('widthChange', width);
+      });
+
+      // Function to set eraser mode
+      $('#eraser').click(function () {
+        ctx.strokeStyle = "#ffffff"; // Setting color to white for erasing
+        socket.emit('eraser');
+      });
+
+      let isDrawing = false;
+
+      $('#clear-button').click(() => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        socket.emit('clearCanvas');
+      });
+
+      /* 
+      Prof. Femister Code
+      We were shown in class how to broadcast a drawing on canvas via socket.io
+      the mouseDown, mousemove, mouseup were taken directly from that example, but we adjusted it for our needs 
+      */
+      $("#myCanvas").mousedown((e) => {
+        isDrawing = true;
+
+        ctx.moveTo(e.clientX, e.clientY);
+        obj.x = e.clientX;
+        obj.y = e.clientY;
+        socket.emit('mdown', obj);
+      });
+
+      $("#myCanvas").mousemove((e) => {
+        if (isDrawing) {
+          ctx.lineTo(e.clientX, e.clientY);
+          ctx.stroke();
+          obj.x = e.clientX;
+          obj.y = e.clientY;
+          socket.emit('mmove', obj);
+        }
+      });
+
+      $("#myCanvas").mouseup(() => {
+        isDrawing = false;
+      });
+
+      // Requesting the current game state
+      socket.emit('requestState');
+
+      // Restoring the canvas, color, and timer by clearing everything and drawing it again (this is functional most of the time, I tried)
+      socket.on('restoreState', function (state) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        state.canvas.forEach(event => {
+          switch (event.type) {
+            case 'mdown':
+              ctx.beginPath();
+              ctx.moveTo(event.data.x, event.data.y);
+              break;
+            case 'mmove':
+              ctx.lineTo(event.data.x, event.data.y);
+              ctx.stroke();
+              break;
+            case 'colorChange':
+              ctx.strokeStyle = event.data;
+              break;
+            case 'widthChange':
+              ctx.lineWidth = event.data;
+              $('#strokeWidth').val(event.data);
+              break;
+            case 'eraser':
+              ctx.strokeStyle = "#ffffff";
+              break;
+          }
+        });
+
+        // Restoring color and stroke width
+        ctx.strokeStyle = state.color;
+        ctx.lineWidth = state.width;
+        $('#strokeWidth').val(state.width);
+
+        // Updating timer text in real time
+        $('#timeRemaining').text(state.timer);
+
+        // Updating word display with the chosen word
+        if (state.word) {
+          $('#wordDisplay').text("Word to draw: " + state.word);
+        } else {
+          $('#wordDisplay').text("");
+        }
+
+        if (state.score) {
+          $('#score').text(state.score);
+        } else {
+          $('#score').text("0");
+        }
+
+        if (state.round) {
+          $('#round').text(state.round);
+        } else {
+          $('#round').text("1");
+        }
+      });
+
+      // sends to server to redirect draw.html to display.html endpoint
+      socket.on('switchRoles', function () {
+        window.location.href = '/display';
+      });
+
+      // game resets to homepage when number of rounds = 4
+      socket.on('reset', function () {
+        window.location.href = '/homepage';
+      });
+    });
+
+    $(function () {
+      var socket = io();
+
+      socket.on('mdown', (obj) => {
+        let canvas = document.getElementById("myCanvas");
+        let ctx = canvas.getContext("2d");
+        ctx.beginPath();
+        ctx.moveTo(obj.x, obj.y);
+      });
+
+      socket.on('mmove', (obj) => {
+        let canvas = document.getElementById("myCanvas");
+        let ctx = canvas.getContext("2d");
+        ctx.lineTo(obj.x, obj.y);
+        ctx.stroke();
+      });
+
+      socket.on('colorChange', function (color) {
+        ctx.strokeStyle = color;
+      });
+
+      socket.on('widthChange', function (width) {
+        ctx.lineWidth = width;
+        $('#strokeWidth').val(width);
+      });
+
+      socket.on('wordSelection', function (word) {
+        $('#wordDisplay').text("Word to draw: " + word);
+
+      });
+
+      socket.on('eraser', function () {
+        ctx.strokeStyle = "#ffffff";
+      });
+
+      socket.on('clearCanvas', function () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      });
+
+      socket.on('forceRefresh', () => {
+        window.location.reload(true);
+      });
+
+      // Updating the timer text
+      socket.on('timer', (remaining) => {
+        $('#timeRemaining').text(remaining);
+      });
+
+      // Listening for the score update event
+      socket.on('score', (score) => {
+        currentScore = score; // Updating the currentScore variable
+        $('#score').text(score);
+      });
+
+      // Listening for the round update event
+      socket.on('round', (round) => {
+        currentRound = round; // Updating the currentRound variable
+        $('#round').text(round);
+      });
+
+      // Showing the time is up popup when time is up, hiding appropriate things and restoring after 3 seconds
+      socket.on('timeUp', function () {
+        $('#timeUpPopup').addClass('show');
+        $('#canvas-container, #toolbox, #info-box, #word-box').hide();
+        $('body').addClass('background-only');
+        $('#popupScoreTimeUp').text(currentScore);
+        $('#popupRoundTimeUp').text(currentRound);
+
+
+        setTimeout(function () {
+          $('#timeUpPopup').removeClass('show');
+          $('#canvas-container, #toolbox').show();
+          $('body').removeClass('background-only');
+        }, 3000);
+      });
+
+      // Showing the correct guess popup, hiding appropriate things and restoring after 3 seconds
+      socket.on('correctGuess', function () {
+        $('#popup').addClass('show');
+        $('#canvas-container, #toolbox, #info-box, #wordDisplay, #word-box').hide();
+        $('body').addClass('background-only');
+        $('#popupScoreCorrect').text(currentScore);
+        $('#popupRoundCorrect').text(currentRound);
+
+        setTimeout(function () {
+          $('#popup').removeClass('show');
+          $('#canvas-container, #toolbox').show();
+          $('body').removeClass('background-only');
+        }, 3000);
+      });
+
+      // updates score
+      socket.on('score', (score) => {
+        $('#score').text(score);
+      });
+    });
+  </script>
+</body>
+
+</html>
